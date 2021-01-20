@@ -1,87 +1,90 @@
 import React, {useState} from 'react'
 import axios from 'axios';
 
-import ResultBox from './ResultBox';
-import MultipleResultsBox from './MultipleResultsBox';
-
-const dataN = {
-  data: {
-    name: 'carlos',
-    country: [
-      {country_id: 'US', probability: 0.1},
-      {country_id: 'NZ', probability: 0.3},
-      {country_id: 'FR', probability: 0.7}
-    ]
-  }
-};
-
-const dataG = {
-  data: {
-    name: 'carlos',
-    gender: 'male',
-    probability: 0.5
-  }
-};
-
-const dataA = {
-  data: {
-    name: 'carlos',
-    age: 22,
-    probability: 0.5
-  }
-};
-
 const App = () => {
   const [name, setName] = useState('');
   const [nationalityData, setNationalityData] = useState([]);
-  const [genderData, setGenderData] = useState({value: '', prob: 0});
-  const [ageData, setAgeData] = useState({value: '', prob: 0});
+  const [genderData, setGenderData] = useState('');
+  const [ageData, setAgeData] = useState('');
+  const [isThinking, setIsThinking] = useState(false);
 
-  const getData = (nameString, url) => {
-    let response = null;
-    axios.get(url + nameString)
-    .then(res => {
-      response = res;
-    }).catch(e => console.log(e));
-    return response;
+  const Box = (value) => <span>{value}, </span>;
+
+  const handleNameSubmit = async () => {
+    // Get Nationality Data
+    await axios.get('https://api.nationalize.io?name=' + name)
+      .then(res => {
+        let nationality = [];
+        if (res.data.country.length)
+          res.data.country.map(id => nationality.push( id.country_id ));
+        else
+          nationality.push('US');
+        setNationalityData(nationality);
+      }).catch(e => console.log(e));
+
+    // Get Gender Data
+    await axios.get('https://api.genderize.io?name=' + name)
+      .then(res => {
+        let gender = (res.data.gender === undefined) ?
+          ((Math.random() < 0.5) ? 'male' : 'female') : res.data.gender;
+        setGenderData(gender);
+      }).catch(e => console.log(e));
+    
+    // Get Age Data
+    await axios.get('https://api.agify.io?name=' + name)
+      .then(res => {
+        let age = (res.data.age === undefined) ? 
+          (Math.random() * 100) + 1 : res.data.age;
+        setAgeData(age);
+      }).catch(e => console.log(e));
+
+    setIsThinking(false);
   };
 
-  const handleNameSubmit = (nameString) => {
-    let responseN = getData(nameString, 'https://api.nationalize.io?name=');
-    let responseG = getData(nameString, 'https://genderize.io/?name=');
-    let responseA = getData(nameString, 'https://api.agify.io?name=');
+  let countries = nationalityData.map(value => Box(value));
 
-    let nationality = [];
-    responseN.country.map(id => {
-      nationality.push({
-        country: id.country_id,
-        prob: id.probability
-      });
-    });
+  const mainStyle = {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center'
+  }
 
-    let gender = {
-      value: responseG.data.gender,
-      prob: responseG.data.probability
-    };
+  let answerStyle = {
+    display: (nationalityData !== [] && genderData !== '' && ageData !== '') ?
+      'initial' : 'none'
+  }
 
-    let age = {
-      value: responseA.data.age,
-      prob: responseA.data.probability
-    };
-
-    setNationalityData(nationality);
-    setGenderData(gender);
-    setAgeData(age);
-  };
+  let thinkingStyle = {
+    display: (isThinking) ?
+      'initial' : 'none'
+  }
 
   return (
-    <div>
-      <input type='text' value={name} onChange={(e) => setName(e.target.value)}/>
-      <button onClick={() => handleNameSubmit(name)}>Get Gender</button>
-      <div style={{display: 'flex', justifyContent: 'space-evenly'}}>
-        <MultipleResultsBox title="Nationality" data={nationalityData} />
-        <ResultBox title="Gender" data={genderData} />
-        <ResultBox title="Age" data={ageData} />
+    <div style={mainStyle}>
+      <div>
+        <input type='text' value={name} onChange={e => {
+          setName(e.target.value)}
+        } />
+      </div>
+      <br />
+      <div>
+        <button onClick={() => {
+          setIsThinking(true);
+          setNationalityData([]);
+          setGenderData('');
+          setAgeData('');
+          handleNameSubmit();
+        }}>Submit</button>
+      </div>
+      <br />
+      <div>
+        <p style={answerStyle}>
+          I think you are from any of these countries <b>{countries}</b> your 
+          gender is <b>{genderData}</b> and you are <b>{ageData}</b> years old.
+        </p>
+        <p style={thinkingStyle}>
+          thinking...
+        </p>
       </div>
     </div>
   );
