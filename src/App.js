@@ -8,8 +8,6 @@ const App = () => {
   const [ageData, setAgeData] = useState('');
   const [isThinking, setIsThinking] = useState(false);
 
-  const Box = (value) => <span>{value}, </span>;
-
   const handleNameSubmit = async () => {
     // Get Nationality Data
     await axios.get('https://api.nationalize.io?name=' + name)
@@ -41,12 +39,61 @@ const App = () => {
     setIsThinking(false);
   };
 
+  const Box = (value) => <span style={{color: 'black'}}>{value}, </span>;
   let countries = nationalityData.map(value => Box(value));
 
   const mainStyle = {
     display: 'flex',
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    flexDirection: 'column'
+  }
+
+  const topSectionStyle = {
+    display: 'flex',
+    justifyContent: 'end',
+    alignItems: 'center',
+    flexDirection: 'column',
+    backgroundColor: 'lightgrey',
+    width: '100vw',
+    height: '50vh'
+  }
+  
+  const bottomSectionStyle = {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'column',
+    backgroundColor: 'red',
+    width: '100vw',
+    height: '44vh',
+    textAlign: 'center',
+    fontSize: '30px',
+    color: 'white'
+  }
+
+  const buttonStyle = {
+    backgroundColor: 'red',
+    marginBottom: '5vh',
+    width: '50vw',
+    height: '50%',
+    border: 'none',
+    fontSize: '20px',
+    color: 'white'
+  }
+
+  const inputStyle = {
+    backgroundColor: 'grey',
+    width: '90vw',
+    height: '60%',
+    border: 'none',
+    marginBottom: '2.5vh',
+    textAlign: 'center',
+    fontSize: '30px'
+  }
+
+  const dataStyle = {
+    color: 'black'
   }
 
   let answerStyle = {
@@ -55,37 +102,55 @@ const App = () => {
   }
 
   let thinkingStyle = {
-    display: (isThinking) ?
-      'initial' : 'none'
+    display: (isThinking) ? 'initial' : 'none'
   }
 
   return (
     <div style={mainStyle}>
-      <div>
-        <input type='text' value={name} onChange={e => {
-          setName(e.target.value)}
-        } />
+
+      <div style={topSectionStyle}>
+        <div>
+          <input style={inputStyle} type='text' value={name} 
+            placeholder="Your name please"
+            onChange={e => {
+              setName(e.target.value)}
+            }
+          />
+        </div>
+
+        <div>
+          <button style={buttonStyle} onClick={() => {
+            setIsThinking(true);
+            setNationalityData([]);
+            setGenderData('');
+            setAgeData('');
+            handleNameSubmit();
+          }}>Submit</button>
+        </div>
       </div>
-      <br />
-      <div>
-        <button onClick={() => {
-          setIsThinking(true);
-          setNationalityData([]);
-          setGenderData('');
-          setAgeData('');
-          handleNameSubmit();
-        }}>Submit</button>
-      </div>
-      <br />
-      <div>
+
+      <div style={bottomSectionStyle}>
         <p style={answerStyle}>
-          I think you are from any of these countries <b>{countries}</b> your 
-          gender is <b>{genderData}</b> and you are <b>{ageData}</b> years old.
+          I think you are from {(countries.length > 1) ? 
+          'any of these countries' : 'this country' } <b>{countries}</b> your 
+          gender is <b style={dataStyle}>{genderData}</b> and you are 
+          <b style={dataStyle}> {ageData}</b> years old.
+        </p>
+        <p style={answerStyle}>
+          ISO codes Reference <a href="https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes#Current_ISO_3166_country_codes">here</a>
         </p>
         <p style={thinkingStyle}>
-          thinking...
+          Thinking...
         </p>
       </div>
+
+      <div style={{height: '10%', textAlign: 'center', fontSize: '14px'}}>
+         Thanks to |   
+          <a href="https://nationalize.io">nationalize.io</a> |
+          <a href="https://genderize.io">genderize.io</a> |
+          <a href="https://agify.io">agify.io</a> |
+      </div>
+
     </div>
   );
 };
